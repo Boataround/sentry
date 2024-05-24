@@ -349,7 +349,6 @@ services:
       - snuba-api
       - snuba-consumer
       - snuba-outcomes-consumer
-      - snuba-sessions-consumer
       - snuba-transactions-consumer
       - symbolicator
       - kafka

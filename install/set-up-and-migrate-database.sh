@@ -44,6 +44,9 @@ fi
 psql -h "$SENTRY_DB_HOST" -U "$SENTRY_DB_USER" -d "$SENTRY_DB_NAME" -qAt -c "ALTER TABLE IF EXISTS sentry_groupedmessage DROP CONSTRAINT IF EXISTS sentry_groupedmessage_project_id_id_515aaa7e_uniq;"
 psql -h "$SENTRY_DB_HOST" -U "$SENTRY_DB_USER" -d "$SENTRY_DB_NAME" -qAt -c "DROP INDEX IF EXISTS sentry_groupedmessage_project_id_id_515aaa7e_uniq;"
 
+#PGPASSWORD="$SENTRY_DB_PASSWORD" psql -h "$SENTRY_DB_HOST" -U "$SENTRY_DB_USER" -d "$SENTRY_DB_NAME" -qAt -c "ALTER TABLE IF EXISTS sentry_groupedmessage DROP CONSTRAINT IF EXISTS sentry_groupedmessage_project_id_id_515aaa7e_uniq;"
+#PGPASSWORD="$SENTRY_DB_PASSWORD" psql -h "$SENTRY_DB_HOST" -U "$SENTRY_DB_USER" -d "$SENTRY_DB_NAME" -qAt -c "DROP INDEX IF EXISTS sentry_groupedmessage_project_id_id_515aaa7e_uniq;"
+
 if [[ -n "${CI:-}" || "${SKIP_USER_CREATION:-0}" == 1 ]]; then
   $dcr web upgrade --noinput
   echo ""

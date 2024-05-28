@@ -344,7 +344,7 @@ services:
         RETRIES=5
         until PGPASSWORD="$SENTRY_DB_PASSWORD" psql -h "$SENTRY_DB_HOST" -U "$SENTRY_DB_USER" -d "$SENTRY_DB_NAME" -c "select 1" >/dev/null 2>&1 || [ "$RETRIES" -eq 0 ]; do
           echo "Waiting for PostgreSQL server at $SENTRY_DB_HOST:$SENTRY_DB_PORT, $RETRIES remaining attempts..."
-          RETRIES=$(expr $RETRIES - 1)
+          RETRIES=$((RETRIES - 1))
           sleep 1
         done
 

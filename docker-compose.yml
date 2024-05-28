@@ -326,11 +326,11 @@ services:
   web:
     <<: *sentry_defaults
     environment:
-      - SENTRY_DB_NAME
-      - SENTRY_DB_USER
-      - SENTRY_DB_PASSWORD
-      - SENTRY_DB_HOST
-      - SENTRY_DB_PORT
+      - SENTRY_DB_NAME=${DB_NAME}
+      - SENTRY_DB_USER=${DB_USER}
+      - SENTRY_DB_PASSWORD=${DB_PASSWORD}
+      - SENTRY_DB_HOST=${DB_HOST}
+      - SENTRY_DB_PORT=${DB_PORT}
 #    entrypoint: ./postgres/postgres-entrypoint.sh
     entrypoint:
       - /bin/sh
@@ -340,53 +340,26 @@ services:
         
         echo "${_group}"
         
-        # Fetch SSM parameters
-        DB_HOST=$(aws ssm get-parameter --name "/Stag/sentry_db_host" --with-decryption --query "Parameter.Value" --output text)
-        DB_PORT=$(aws ssm get-parameter --name "/Stag/sentry_db_port" --with-decryption --query "Parameter.Value" --output text)
-        DB_USER=$(aws ssm get-parameter --name "/Stag/sentry_db_user" --with-decryption --query "Parameter.Value" --output text)
-        DB_PASSWORD=$(aws ssm get-parameter --name "/Stag/sentry_db_password" --with-decryption --query "Parameter.Value" --output text)
-        
-        # Check if parameters are fetched successfully
-        if [ -z "$DB_HOST" ]; then
-          echo "Failed to fetch DB_HOST from SSM. Exiting."
-          exit 1
-        fi
-        
-        if [ -z "$DB_PORT" ]; then
-          echo "Failed to fetch DB_PORT from SSM. Using default port 5432."
-          DB_PORT=5432
-        fi
-        
-        if [ -z "$DB_USER" ]; then
-          echo "Failed to fetch SENTRY_DB_USER from SSM. Exiting."
-          exit 1
-        fi
-        
-        if [ -z "$DB_PASSWORD" ]; then
-          echo "Failed to fetch SENTRY_DB_PASSWORD from SSM. Exiting."
-          exit 1
-        fi
-        
         # Wait for the external PostgreSQL database to be ready
         RETRIES=5
-        until PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$SENTRY_DB_NAME" -c "select 1" >/dev/null 2>&1 || [ $RETRIES -eq 0 ]; do
-          echo "Waiting for PostgreSQL server at $DB_HOST:$DB_PORT, $((RETRIES--)) remaining attempts..."
+        until PGPASSWORD="SENTRY_DB_PASSWORD" psql -h "$DB_HOST" -U "SENTRY_DB_USER" -d "$SENTRY_DB_NAME" -c "select 1" >/dev/null 2>&1 || [ $RETRIES -eq 0 ]; do
+          echo "Waiting for PostgreSQL server at $SENTRY_DB_HOST:SENTRY_DB_PORT, $((RETRIES--)) remaining attempts..."
           sleep 1
         done
         
         if [ $RETRIES -eq 0 ]; then
-          echo "Failed to connect to PostgreSQL server at $DB_HOST:$DB_PORT. Exiting."
+          echo "Failed to connect to PostgreSQL server at $SENTRY_DB_HOST:SENTRY_DB_PORT. Exiting."
           exit 1
         fi
         
         echo "Re-indexing due to glibc change, this may take a while..."
         
         # Reindex all databases and their system catalogs which are not templates
-        DBS=$(PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d postgres -t -c "SELECT datname FROM pg_database WHERE datistemplate = false;" | xargs)
+        DBS=$(PGPASSWORD=SENTRY_DB_PASSWORD psql -h $SENTRY_DB_HOST -U $SENTRY_DB_USER -d postgres -t -c "SELECT datname FROM pg_database WHERE datistemplate = false;" | xargs)
         for db in ${DBS}; do
           echo "Re-indexing database: ${db}"
-          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d ${db} -c "REINDEX SYSTEM ${db};"
-          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d ${db} -c "REINDEX DATABASE ${db};"
+          PGPASSWORD=$SENTRY_DB_PASSWORD psql -h $SENTRY_DB_HOST -U $SENTRY_DB_USER -d ${db} -c "REINDEX SYSTEM ${db};"
+          PGPASSWORD=$SENTRY_DB_PASSWORD psql -h $SENTRY_DB_HOST -U $SENTRY_DB_USER -d ${db} -c "REINDEX DATABASE ${db};"
         done
         
         echo "${_endgroup}"

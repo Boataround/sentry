@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#TODO Rename file to update-env.sh
+
 # Fetch the database parameters from AWS SSM
 DB_NAME=$(aws ssm get-parameter --name "/Stag/sentry_db_name" --query "Parameter.Value" --output text)
 DB_USER=$(aws ssm get-parameter --name "/Stag/sentry_db_user" --query "Parameter.Value" --output text)
@@ -8,7 +10,7 @@ DB_HOST=$(aws ssm get-parameter --name "/Stag/sentry_db_host" --query "Parameter
 DB_PORT=$(aws ssm get-parameter --name "/Stag/sentry_db_port" --query "Parameter.Value" --output text)
 
 # Path to the .env file
-ENV_FILE=".env"
+ENV_FILE=".env.custom"
 
 # Function to update or add a variable in the .env file
 update_env_file() {

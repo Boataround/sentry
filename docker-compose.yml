@@ -475,9 +475,8 @@ volumes:
   # These store application data that should persist across restarts.
   sentry-data:
     external: true
-## COMMENTED BECAUSE EXTERNAL DATABASE CONNECTED
-#  sentry-postgres:
-#    external: true
+  sentry-postgres:
+    external: true
   sentry-redis:
     external: true
   sentry-zookeeper:

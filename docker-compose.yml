@@ -147,7 +147,12 @@ services:
         "max_wal_senders=1",
       ]
     environment:
-      POSTGRES_HOST_AUTH_METHOD: "trust"
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - SENTRY_DB_NAME=${DB_NAME}
+      - SENTRY_DB_USER=${DB_USER}
+      - SENTRY_DB_PASSWORD=${DB_PASSWORD}
+      - SENTRY_DB_HOST=${DB_HOST}
+      - SENTRY_DB_PORT=${DB_PORT}
     entrypoint: /opt/sentry/postgres-entrypoint.sh
     volumes:
       - "sentry-postgres:/var/lib/postgresql/data"

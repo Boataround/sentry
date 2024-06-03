@@ -332,8 +332,9 @@ services:
       - SENTRY_DB_HOST=${DB_HOST}
       - SENTRY_DB_PORT=${DB_PORT}
     entrypoint: #./postgres/postgres-entrypoint.sh
-      - |  
-        #!/bin/bash
+      - /bin/bash
+      - -c
+      - |
         set -e
   
         prep_init_db() {
